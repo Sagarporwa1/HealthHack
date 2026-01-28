@@ -47,22 +47,17 @@ OralCancerApp/
 
 ### Installation
 
-1. **Clone and Navigate**:
-   ```bash
-   cd OralCancerApp
-   ```
-
-2. **Install Dependencies**:
+1. **Install Dependencies**:
    ```bash
    npm install
    ```
 
-3. **Start the Project**:
+2. **Start the Project**:
    ```bash
    npx expo start
    ```
 
-4. **Run on Emulator/Device**:
+3. **Run on Emulator/Device**:
    - Press `a` for Android Emulator.
    - Press `i` for iOS Simulator.
    - Scan the QR code with your phone using the Expo Go app.
