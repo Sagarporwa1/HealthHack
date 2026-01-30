@@ -7,13 +7,14 @@ import {
     Image,
     Alert,
     ActivityIndicator,
+    ScrollView,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../styles/theme';
 import Button from '../components/Button';
-import { detectionService } from '../services/detectionService';
+import djangoDetectionService from '../services/djangoDetectionService';
 
 export default function CameraScreen({ navigation }) {
     const insets = useSafeAreaInsets();
@@ -21,12 +22,15 @@ export default function CameraScreen({ navigation }) {
     const [capturedImage, setCapturedImage] = useState(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [facing, setFacing] = useState('back');
+    const [connected, setConnected] = useState(false);
     const cameraRef = useRef(null);
 
     useEffect(() => {
         if (permission && !permission.granted) {
             requestPermission();
         }
+        checkConnection();
+    }, []);
     }, [permission]);
 
     const handleCapture = async () => {
@@ -40,6 +44,25 @@ export default function CameraScreen({ navigation }) {
                 console.error('Error taking picture:', error);
                 Alert.alert('Error', 'Failed to capture image. Please try again.');
             }
+        }
+    };
+
+    const checkConnection = async () => {
+        try {
+            const isConnected = await djangoDetectionService.testConnection();
+            setConnected(isConnected);
+            if (!isConnected) {
+                Alert.alert(
+                    'Connection Error',
+                    'Cannot connect to Django server. Make sure:\n' +
+                    '1. Django server is running\n' +
+                    '2. Correct IP address is configured\n' +
+                    '3. Both devices are on same network'
+                );
+            }
+        } catch (error) {
+            console.error('Connection check failed:', error);
+            setConnected(false);
         }
     };
 
@@ -66,16 +89,38 @@ export default function CameraScreen({ navigation }) {
 
         setIsAnalyzing(true);
         try {
-            const result = await detectionService.analyzeImage(capturedImage);
-
-            if (result.success) {
-                navigation.replace('Analysis', { scan: result });
-            } else {
-                Alert.alert('Analysis Failed', result.error || 'Unable to analyze image');
+            // Check connection first
+            const isConnected = await djangoDetectionService.testConnection();
+            if (!isConnected) {
+                Alert.alert(
+                    'Connection Error',
+                    'Cannot reach Django server. Please check:\n' +
+                    '1. Django server is running\n' +
+                    '2. Correct IP in djangoDetectionService.js\n' +
+                    '3. Network connectivity'
+                );
+                setIsAnalyzing(false);
+                return;
             }
+
+            // Perform detection
+            const result = await djangoDetectionService.detectDisease(capturedImage);
+
+            // Navigate to results with detected data
+            navigation.replace('Analysis', {
+                detectionResult: result,
+                imagePath: capturedImage,
+                scan: {
+                    success: true,
+                    diseasePercentage: result.diseasePercentage,
+                    severityLevel: result.severityLevel,
+                    confidence: result.confidence,
+                    imagePath: capturedImage,
+                }
+            });
         } catch (error) {
             console.error('Analysis error:', error);
-            Alert.alert('Error', 'Failed to analyze image. Please try again.');
+            Alert.alert('Error', error.message || 'Failed to analyze image. Please try again.');
         } finally {
             setIsAnalyzing(false);
         }
@@ -129,7 +174,14 @@ export default function CameraScreen({ navigation }) {
                     <Text style={styles.closeText}>✕</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Capture Image</Text>
-                <View style={styles.placeholder} />
+                <View style={[
+                    styles.connectionBadge,
+                    { backgroundColor: connected ? '#4CAF50' : '#FF5722' }
+                ]}>
+                    <Text style={styles.connectionText}>
+                        {connected ? '✓' : '✗'}
+                    </Text>
+                </View>
             </View>
 
             {/* Camera or Preview */}
@@ -216,6 +268,27 @@ const styles = StyleSheet.create({
     },
     closeText: {
         fontSize: 28,
+        color: '#FFF',
+    },
+    headerTitle: {
+        fontSize: theme.fontSizes.lg,
+        fontWeight: theme.fontWeights.bold,
+        color: '#FFF',
+        flex: 1,
+        textAlign: 'center',
+    },
+    connectionBadge: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    connectionText: {
+        color: '#FFF',
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
         color: theme.colors.textWhite,
     },
     headerTitle: {
