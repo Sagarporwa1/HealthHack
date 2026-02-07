@@ -427,7 +427,7 @@ If something isn't working:
 - Make sure you followed each step exactly
 - Try the "Common Problems" section above
 
-**Remember:** The first time is always the hardest! Once it's set up, it's much easier to use. 💪
+**Remember:** The first time is always the hardest! Once it's set up, it's much easier to use. 
 
 ## ⚠️ Medical Disclaimer
 
