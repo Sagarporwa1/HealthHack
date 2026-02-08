@@ -16,6 +16,8 @@ import EducationScreen from '../screens/EducationScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import { supabase } from '../services/supabaseClient';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -93,32 +95,65 @@ function MainTabs() {
 
 // Root navigator
 export default function AppNavigator() {
+    const [session, setSession] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        // Check initial session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            setLoading(false);
+        });
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    if (loading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>Loading Auth...</Text>
+            </View>
+        );
+    }
+
     return (
         <NavigationContainer>
             <Stack.Navigator
-                initialRouteName="Login"
                 screenOptions={{
                     headerShown: false,
                     animation: 'slide_from_right',
                 }}
             >
-                <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="MainTabs" component={MainTabs} />
-                <Stack.Screen
-                    name="Camera"
-                    component={CameraScreen}
-                    options={{
-                        animation: 'fade_from_bottom',
-                    }}
-                />
-                <Stack.Screen
-                    name="Analysis"
-                    component={AnalysisScreen}
-                />
-                <Stack.Screen
-                    name="Settings"
-                    component={SettingsScreen}
-                />
+                {session ? (
+                    <>
+                        <Stack.Screen name="MainTabs" component={MainTabs} />
+                        <Stack.Screen
+                            name="Camera"
+                            component={CameraScreen}
+                            options={{
+                                animation: 'fade_from_bottom',
+                            }}
+                        />
+                        <Stack.Screen
+                            name="Analysis"
+                            component={AnalysisScreen}
+                        />
+                        <Stack.Screen
+                            name="Settings"
+                            component={SettingsScreen}
+                        />
+                    </>
+                ) : (
+                    <>
+                        <Stack.Screen name="Login" component={LoginScreen} />
+                        <Stack.Screen name="Register" component={RegisterScreen} />
+                    </>
+                )}
             </Stack.Navigator>
         </NavigationContainer>
     );

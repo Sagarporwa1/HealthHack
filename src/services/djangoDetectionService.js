@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as FileSystem from 'expo-file-system/legacy';
+import { supabase } from './supabaseClient';
 
 // Configure this based on your Django server location
 const DJANGO_BASE_URL = 'http://172.25.244.109:8000';
@@ -13,6 +14,24 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Add a request interceptor to inject the Supabase JWT
+axiosInstance.interceptors.request.use(
+  async (config) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        config.headers.Authorization = `Bearer ${session.access_token}`;
+      }
+    } catch (error) {
+      console.error('Error getting Supabase session for API call:', error);
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 class DjangoDetectionService {
   constructor() {
