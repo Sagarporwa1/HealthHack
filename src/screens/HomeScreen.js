@@ -6,6 +6,8 @@ import { theme } from '../styles/theme';
 import Button from '../components/Button';
 import ScanCard from '../components/ScanCard';
 import { storageService } from '../services/storageService';
+import { profileService } from '../services/profileService';
+import { supabase } from '../services/supabaseClient';
 
 const { width } = Dimensions.get('window');
 
@@ -13,10 +15,15 @@ export default function HomeScreen({ navigation }) {
     const insets = useSafeAreaInsets();
     const [stats, setStats] = useState(null);
     const [recentScans, setRecentScans] = useState([]);
+    const [userName, setUserName] = useState('');
 
     useEffect(() => {
         loadData();
-        const unsubscribe = navigation.addListener('focus', loadData);
+        loadUserName();
+        const unsubscribe = navigation.addListener('focus', () => {
+            loadData();
+            loadUserName();
+        });
         return unsubscribe;
     }, [navigation]);
 
@@ -25,6 +32,22 @@ export default function HomeScreen({ navigation }) {
         const allScans = await storageService.getAllScans();
         setStats(scanStats);
         setRecentScans(allScans.slice(0, 3));
+    };
+
+    const loadUserName = async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const profile = await profileService.getProfile(user.id);
+                if (profile?.full_name) {
+                    // Get first name only
+                    const firstName = profile.full_name.split(' ')[0];
+                    setUserName(firstName);
+                }
+            }
+        } catch (error) {
+            console.log('Error loading user name:', error);
+        }
     };
 
     const handleStartScan = () => {
@@ -47,11 +70,16 @@ export default function HomeScreen({ navigation }) {
                 >
                     <View style={styles.headerContent}>
                         <View>
-                            <Text style={styles.greeting}>Hello,</Text>
-                            <Text style={styles.headerTitle}>Stay Healthy</Text>
+                            <Text style={styles.greeting}>Hello 👋</Text>
+                            <Text style={styles.userName}>{userName || 'User'}</Text>
                         </View>
-                        <TouchableOpacity style={styles.profileButton}>
-                            <Text style={styles.profileEmoji}>👤</Text>
+                        <TouchableOpacity
+                            style={styles.profileButton}
+                            onPress={() => navigation.navigate('Profile')}
+                        >
+                            <Text style={styles.profileEmoji}>
+                                {userName ? userName.charAt(0).toUpperCase() : '👤'}
+                            </Text>
                         </TouchableOpacity>
                     </View>
 
@@ -162,13 +190,29 @@ const styles = StyleSheet.create({
     headerContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         marginBottom: theme.spacing.xl,
     },
     greeting: {
-        fontSize: theme.fontSizes.lg,
+        fontSize: 18,
         color: theme.colors.textWhite,
-        opacity: 0.8,
+        opacity: 0.85,
+        letterSpacing: 0.5,
+    },
+    userName: {
+        fontSize: 34,
+        fontWeight: theme.fontWeights.extraBold,
+        color: theme.colors.textWhite,
+        marginTop: 2,
+        letterSpacing: -0.5,
+    },
+    headerSubtitle: {
+        fontSize: 26,
+        fontWeight: theme.fontWeights.medium,
+        color: theme.colors.textWhite,
+        opacity: 0.9,
+        marginTop: 8,
+        letterSpacing: 0.3,
     },
     headerTitle: {
         fontSize: theme.fontSizes.xxxl,
@@ -188,7 +232,7 @@ const styles = StyleSheet.create({
     },
     quickActionCard: {
         position: 'absolute',
-        bottom: -50,
+        bottom: -35,
         left: theme.spacing.lg,
         right: theme.spacing.lg,
         backgroundColor: theme.colors.surface,

@@ -1,42 +1,143 @@
-# OralHealth AI - Oral Cancer Detection & Monitoring 🦷
+# HealthHack - Oral Health AI Detection & Monitoring 🦷
 
-OralHealth AI is a premium React Native application designed for the early detection and monitoring of oral cancer using AI image analysis. It empowers users to take control of their oral health through quick screenings, educational resources, and secure health tracking.
+HealthHack is a premium React Native application designed for the early detection and monitoring of oral health issues using AI image analysis. It empowers users to take control of their oral health through quick screenings, educational resources, and secure health tracking.
 
 ## ✨ Key Features
 
-- **🚀 AI-Powered Scanning**: Capture or upload images of concerning oral lesions for instant AI-based risk assessment.
+- **🚀 AI-Powered Scanning**: Capture or upload images of concerning oral lesions for instant AI-based risk assessment using TensorFlow Lite.
 - **📊 Medical Analysis**: Detailed diagnostic reports including risk levels, confidence scores, and key findings.
 - **📋 Scan History**: Maintain a secure, searchable archive of all past assessments to track changes over time.
 - **📚 Learning Center**: Comprehensive educational resources on oral health, risk factors, and preventive care.
-- **👤 Secure Profiles**: Personalized user experience with health stats and secure local data management.
+- **🔐 Secure Authentication**: User login/registration powered by Supabase with session management.
+- **👤 User Profiles**: Personalized experience with user details form, medical conditions tracking, and profile management.
 - **🎨 Premium UI**: Modern, high-performance design with fluid gradients, glassmorphism, and dynamic safe-area handling.
 - **🔒 Privacy First**: All scan data is stored locally on the device, ensuring maximum user privacy.
 
 ## 🛠️ Tech Stack
 
+### Mobile App (React Native)
 - **Framework**: [React Native](https://reactnative.dev/) with [Expo](https://expo.dev/)
 - **Navigation**: [React Navigation](https://reactnavigation.org/) (Stack & Bottom Tabs)
-- **Icons**: [Ionicons](https://ionic.io/ionicons)
-- **Styling**: Vanilla StyleSheet with a custom Design System
-- **State/Storage**: [AsyncStorage](https://react-native-async-storage.github.io/async-storage/) for local history
+- **Authentication**: [Supabase Auth](https://supabase.com/auth) with email/password
+- **Database**: [Supabase](https://supabase.com/) (PostgreSQL) for user profiles
+- **Icons**: [Ionicons](https://ionic.io/ionicons) & [@expo/vector-icons](https://icons.expo.fyi/)
+- **Styling**: Vanilla StyleSheet with a custom Design System (theme.js)
+- **State/Storage**: [AsyncStorage](https://react-native-async-storage.github.io/async-storage/) for local scan history
 - **Safe Area**: [React Native Safe Area Context](https://github.com/th3rdwave/react-native-safe-area-context) for modern device support
+
+### Backend (Django)
+- **Framework**: [Django](https://www.djangoproject.com/) 6.0 with [Django REST Framework](https://www.django-rest-framework.org/)
+- **AI Model**: TensorFlow Lite (oral_segmentation_quantized.tflite)
+- **Database**: PostgreSQL (Supabase-hosted)
+- **Authentication**: Supabase JWT verification
+- **CORS**: django-cors-headers for cross-origin requests
 
 ## 📂 Project Structure
 
 ```text
-OralCancerApp/
+HealthHack/
 ├── src/
-│   ├── components/      # Reusable UI components (Buttons, Cards, Headers)
-│   ├── navigation/      # Navigation configuration (AppNavigator)
-│   ├── screens/         # Main app screens (Home, Camera, Analysis, etc.)
-│   ├── services/        # Business logic (Detection, Storage services)
-│   ├── styles/          # Global theme and design tokens
-│   ├── utils/           # Constants and helper functions
-│   └── assets/          # Static images and icons
-├── App.js               # Application entry point
-├── app.json             # Expo configuration
-└── package.json         # Dependencies and scripts
+│   ├── components/         # Reusable UI components (Button, ScanCard, Header)
+│   ├── navigation/         # Navigation configuration (AppNavigator with auth flow)
+│   ├── screens/            # Main app screens
+│   │   ├── HomeScreen.js           # Dashboard with user greeting
+│   │   ├── CameraScreen.js         # Image capture for AI analysis
+│   │   ├── AnalysisScreen.js       # AI detection results
+│   │   ├── HistoryScreen.js        # Scan history with search/filter
+│   │   ├── EducationScreen.js      # Learning center
+│   │   ├── ProfileScreen.js        # User profile with stats
+│   │   ├── LoginScreen.js          # Authentication
+│   │   ├── RegisterScreen.js       # New user registration
+│   │   └── UserDetailsScreen.js    # Profile setup form
+│   ├── services/           # Business logic
+│   │   ├── authService.js          # Supabase authentication
+│   │   ├── profileService.js       # User profile CRUD
+│   │   ├── storageService.js       # Local scan storage
+│   │   ├── djangoDetectionService.js # AI backend communication
+│   │   └── supabaseClient.js       # Supabase client config
+│   ├── styles/             # Global theme and design tokens
+│   └── utils/              # Constants and helper functions
+├── django_backend/         # Python AI backend
+│   ├── config/             # Django settings
+│   ├── detector/           # AI detection API
+│   ├── ml_model/           # TensorFlow Lite model
+│   └── requirements.txt    # Python dependencies
+├── App.js                  # Application entry point
+├── app.json                # Expo configuration
+└── package.json            # Dependencies and scripts
 ```
+
+## 🔄 App Flow Diagram
+
+```mermaid
+flowchart TD
+    A[App Launch] --> B{User Logged In?}
+    B -->|No| C[Login Screen]
+    C --> D{New User?}
+    D -->|Yes| E[Register Screen]
+    E --> F[User Details Form]
+    D -->|No| G[Enter Credentials]
+    G --> H{Auth Success?}
+    H -->|No| C
+    H -->|Yes| I{Profile Complete?}
+    F --> I
+    B -->|Yes| I
+    I -->|No| F
+    I -->|Yes| J[Home Screen]
+    
+    J --> K[Start Scan]
+    K --> L[Camera Screen]
+    L --> M[Capture/Upload Image]
+    M --> N[Send to Django API]
+    N --> O[AI Analysis]
+    O --> P[Analysis Results]
+    P --> Q[Save to History]
+    Q --> J
+    
+    J --> R[View History]
+    R --> S[History Screen]
+    S --> T[Select Scan]
+    T --> P
+    
+    J --> U[Profile]
+    U --> V[Profile Screen]
+    V --> W[Sign Out]
+    W --> C
+```
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart LR
+    subgraph Mobile["📱 React Native App"]
+        UI[UI Screens]
+        Auth[Auth Service]
+        Profile[Profile Service]
+        Storage[Storage Service]
+        Detection[Detection Service]
+    end
+    
+    subgraph Cloud["☁️ Supabase Cloud"]
+        SupaAuth[Auth API]
+        SupaDB[(PostgreSQL DB)]
+    end
+    
+    subgraph Backend["🖥️ Django Backend"]
+        API[REST API]
+        TFLite[TensorFlow Lite Model]
+    end
+    
+    UI --> Auth
+    UI --> Profile
+    UI --> Storage
+    UI --> Detection
+    
+    Auth <--> SupaAuth
+    Profile <--> SupaDB
+    Detection <--> API
+    API --> TFLite
+```
+
 
 ## 🚀 Installation Guide for Windows Users
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../styles/theme';
@@ -17,7 +17,9 @@ import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import UserDetailsScreen from '../screens/UserDetailsScreen';
 import { supabase } from '../services/supabaseClient';
+import { profileService } from '../services/profileService';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -97,26 +99,59 @@ function MainTabs() {
 export default function AppNavigator() {
     const [session, setSession] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
+    const [profileComplete, setProfileComplete] = React.useState(false);
+    const [checkingProfile, setCheckingProfile] = React.useState(false);
+
+    // Check if profile is complete
+    const checkProfileStatus = React.useCallback(async (userId) => {
+        if (!userId) return false;
+        setCheckingProfile(true);
+        try {
+            const isComplete = await profileService.isProfileComplete(userId);
+            setProfileComplete(isComplete);
+            return isComplete;
+        } catch (error) {
+            console.log('Profile check error:', error);
+            setProfileComplete(false);
+            return false;
+        } finally {
+            setCheckingProfile(false);
+        }
+    }, []);
 
     React.useEffect(() => {
         // Check initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
             setSession(session);
+            if (session?.user?.id) {
+                await checkProfileStatus(session.user.id);
+            }
             setLoading(false);
         });
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             setSession(session);
+            if (session?.user?.id) {
+                await checkProfileStatus(session.user.id);
+            } else {
+                setProfileComplete(false);
+            }
         });
 
         return () => subscription.unsubscribe();
+    }, [checkProfileStatus]);
+
+    // Handler for when profile is completed
+    const handleProfileComplete = React.useCallback(() => {
+        setProfileComplete(true);
     }, []);
 
-    if (loading) {
+    if (loading || checkingProfile) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>Loading Auth...</Text>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+                <Text style={{ marginTop: 16, color: theme.colors.textSecondary }}>Loading...</Text>
             </View>
         );
     }
@@ -130,24 +165,35 @@ export default function AppNavigator() {
                 }}
             >
                 {session ? (
-                    <>
-                        <Stack.Screen name="MainTabs" component={MainTabs} />
-                        <Stack.Screen
-                            name="Camera"
-                            component={CameraScreen}
-                            options={{
-                                animation: 'fade_from_bottom',
-                            }}
-                        />
-                        <Stack.Screen
-                            name="Analysis"
-                            component={AnalysisScreen}
-                        />
-                        <Stack.Screen
-                            name="Settings"
-                            component={SettingsScreen}
-                        />
-                    </>
+                    profileComplete ? (
+                        <>
+                            <Stack.Screen name="MainTabs" component={MainTabs} />
+                            <Stack.Screen
+                                name="Camera"
+                                component={CameraScreen}
+                                options={{
+                                    animation: 'fade_from_bottom',
+                                }}
+                            />
+                            <Stack.Screen
+                                name="Analysis"
+                                component={AnalysisScreen}
+                            />
+                            <Stack.Screen
+                                name="Settings"
+                                component={SettingsScreen}
+                            />
+                        </>
+                    ) : (
+                        <Stack.Screen name="UserDetails">
+                            {(props) => (
+                                <UserDetailsScreen
+                                    {...props}
+                                    onComplete={handleProfileComplete}
+                                />
+                            )}
+                        </Stack.Screen>
+                    )
                 ) : (
                     <>
                         <Stack.Screen name="Login" component={LoginScreen} />
