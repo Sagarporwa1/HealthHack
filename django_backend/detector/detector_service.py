@@ -65,8 +65,24 @@ class DiseaseDetector:
             
             # Preprocess
             image_resized = image.resize((self.input_size, self.input_size))
-            input_data = np.array(image_resized, dtype=np.float32) / 255.0
             
+            # Get input details to determine required type
+            input_details = self.interpreter.get_input_details()[0]
+            input_type = input_details['dtype']
+            
+            # Prepare input data based on model requirements
+            if input_type == np.float32:
+                input_data = np.array(image_resized, dtype=np.float32) / 255.0
+            elif input_type == np.int8 or input_type == np.uint8:
+                # For quantized models, we need to quantize the input
+                input_scale, input_zero_point = input_details['quantization']
+                normalized_input = np.array(image_resized, dtype=np.float32) / 255.0
+                input_data = (normalized_input / input_scale) + input_zero_point
+                input_data = input_data.astype(input_type)
+            else:
+                # Fallback for other types
+                input_data = np.array(image_resized, dtype=input_type)
+
             # Add batch dimension
             input_data = np.expand_dims(input_data, axis=0)
             
@@ -77,7 +93,13 @@ class DiseaseDetector:
             )
             self.interpreter.invoke()
             
-            output = self.interpreter.get_tensor(self.output_details[0]['index'])
+            output_details = self.output_details[0]
+            output = self.interpreter.get_tensor(output_details['index'])
+            
+            # Dequantize output if necessary
+            if output_details['dtype'] == np.int8 or output_details['dtype'] == np.uint8:
+                scale, zero_point = output_details['quantization']
+                output = (output.astype(np.float32) - zero_point) * scale
             
             # Process results
             results = self._process_output(output)
