@@ -14,6 +14,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.auth',
+    'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
     'detector',
@@ -101,7 +102,8 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True  # Enable all origins for development to avoid 403/CORS issues
 
 # TFLite Model Path
-MODEL_PATH = os.getenv('MODEL_PATH', os.path.join(BASE_DIR.parent, 'ml_model', 'oral_segmentation_quantized.tflite'))
+# TFLite Model Path
+MODEL_PATH = os.getenv('MODEL_PATH', os.path.join(BASE_DIR, 'ml_model', 'oral_segmentation_quantized.tflite'))
 
 # Logging
 LOGGING = {
