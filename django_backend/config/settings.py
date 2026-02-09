@@ -87,7 +87,7 @@ REST_FRAMEWORK = {
         'config.authentication.SupabaseAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
 }
 
@@ -97,7 +97,7 @@ SUPABASE_JWT_SECRET = os.getenv('SUPABASE_JWT_SECRET', 'YOUR_SUPABASE_JWT_SECRET
 # CORS
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:8000').split(',')
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins in development
+CORS_ALLOW_ALL_ORIGINS = True  # Enable all origins for development to avoid 403/CORS issues
 
 # TFLite Model Path
 MODEL_PATH = os.getenv('MODEL_PATH', os.path.join(BASE_DIR.parent, 'ml_model', 'oral_segmentation_quantized.tflite'))

@@ -3,11 +3,15 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework import authentication
 from rest_framework import exceptions
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SupabaseAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         auth_header = request.META.get('HTTP_AUTHORIZATION')
         if not auth_header:
+            logger.info("No Authorization header found")
             return None
 
         try:
@@ -25,6 +29,7 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
 
             # Decode the token
             payload = jwt.decode(token, jwt_secret, algorithms=["HS256"], audience="authenticated")
+            logger.info(f"Token decoded successfully for user subject: {payload.get('sub')}")
             
             # The 'sub' field in Supabase JWT is the User ID (UUID)
             user_id = payload.get('sub')

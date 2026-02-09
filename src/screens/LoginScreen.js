@@ -15,7 +15,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../styles/theme';
 import Button from '../components/Button';
 import { authService } from '../services/authService';
-import Alert from '../components/Alert'; // Assuming an Alert component exists or using standard Text
 
 const { width } = Dimensions.get('window');
 
@@ -24,6 +23,7 @@ export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -36,7 +36,6 @@ export default function LoginScreen({ navigation }) {
 
         try {
             await authService.signIn(email, password);
-            navigation.replace('MainTabs');
         } catch (err) {
             setError(err.message || 'Failed to sign in');
         } finally {

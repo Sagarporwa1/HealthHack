@@ -1,16 +1,22 @@
 from rest_framework.views import APIView
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, permissions
 from detector.detector_service import get_detector
 import logging
 
 logger = logging.getLogger(__name__)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class DetectDiseaseView(APIView):
     """API endpoint for disease detection"""
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = [] # Disable authentication for testing
     
     def post(self, request):
+        logger.info(f"Received POST request to /api/detect/. Data keys: {list(request.data.keys()) if hasattr(request, 'data') else 'No data'}")
         """
         Detect oral disease from uploaded image
         

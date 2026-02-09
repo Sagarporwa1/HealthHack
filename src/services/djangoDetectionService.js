@@ -3,7 +3,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from './supabaseClient';
 
 // Configure this based on your Django server location
-const DJANGO_BASE_URL = 'http://172.25.244.109:8000';
+const DJANGO_BASE_URL = 'http://172.25.188.180:8000';
 const DJANGO_API_URL = `${DJANGO_BASE_URL}/api/detect/`;
 const DJANGO_HEALTH_URL = `${DJANGO_BASE_URL}/api/health/`;
 const TIMEOUT = 30000; // 30 seconds
