@@ -29,8 +29,11 @@
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
-      ]
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.oralcancer.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -42,6 +45,11 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for oral health scanning."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "bc198f74-fc34-4cb8-ad3c-b7c107406681"
+      }
+    }
   }
 }

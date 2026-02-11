@@ -80,29 +80,39 @@ export default function AnalysisScreen({ route, navigation }) {
                 {/* Analysis Card */}
                 <View style={[styles.mainCard, { borderLeftColor: riskColor }]}>
                     <View style={styles.cardHeader}>
-                        <Text style={styles.cardTitle}>Diagnostic Assessment</Text>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.cardTitle}>Diagnostic Assessment</Text>
+                            <Text style={[styles.severityLabel, { color: riskColor }]}>
+                                {scan.severityLevel}
+                            </Text>
+                        </View>
                         <View style={styles.confidenceBadge}>
                             <Text style={styles.confidenceText}>{scan.confidence}% Confidence</Text>
                         </View>
+                    </View>
+
+                    <View style={styles.percentageRow}>
+                        <Text style={styles.percentageLabel}>Detected Disease Area:</Text>
+                        <Text style={styles.percentageValue}>{scan.actualPercentage || scan.diseasePercentage}%</Text>
                     </View>
 
                     <Text style={styles.description}>
                         {RISK_DESCRIPTIONS[scan.riskLevel]}
                     </Text>
 
-                    {/* Score Bar */}
+                    {/* Score Bar - showing disease extent */}
                     <View style={styles.scoreBarContainer}>
                         <View style={styles.scoreBarBackground}>
                             <View
                                 style={[
                                     styles.scoreBarFill,
-                                    { width: `${scan.confidence}%`, backgroundColor: riskColor }
+                                    { width: `${Math.min(scan.diseasePercentage, 100)}%`, backgroundColor: riskColor }
                                 ]}
                             />
                         </View>
                         <View style={styles.scoreLabels}>
-                            <Text style={styles.scoreLabel}>Low</Text>
-                            <Text style={styles.scoreLabel}>High</Text>
+                            <Text style={styles.scoreLabel}>Extent of Condition</Text>
+                            <Text style={styles.scoreLabel}>{Math.round(scan.diseasePercentage)}%</Text>
                         </View>
                     </View>
                 </View>
@@ -247,7 +257,12 @@ const styles = StyleSheet.create({
         fontSize: theme.fontSizes.lg,
         fontWeight: theme.fontWeights.bold,
         color: theme.colors.textPrimary,
-        flex: 1,
+    },
+    severityLabel: {
+        fontSize: theme.fontSizes.md,
+        fontWeight: theme.fontWeights.semibold,
+        marginTop: 2,
+        textTransform: 'uppercase',
     },
     confidenceBadge: {
         backgroundColor: theme.colors.primaryLight,
@@ -264,7 +279,27 @@ const styles = StyleSheet.create({
         fontSize: theme.fontSizes.md,
         color: theme.colors.textSecondary,
         lineHeight: 24,
+        marginBottom: theme.spacing.md,
+    },
+    percentageRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: theme.spacing.md,
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: theme.colors.borderLight,
         marginBottom: theme.spacing.lg,
+    },
+    percentageLabel: {
+        fontSize: theme.fontSizes.md,
+        color: theme.colors.textPrimary,
+        fontWeight: theme.fontWeights.medium,
+    },
+    percentageValue: {
+        fontSize: theme.fontSizes.xl,
+        color: theme.colors.primary,
+        fontWeight: theme.fontWeights.bold,
     },
     scoreBarContainer: {
         marginTop: theme.spacing.sm,

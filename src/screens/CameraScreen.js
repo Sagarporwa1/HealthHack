@@ -126,10 +126,13 @@ export default function CameraScreen({ navigation }) {
                     diseasePercentage: result.diseasePercentage,
                     severityLevel: result.severityLevel,
                     riskLevel: riskLevel,
-                    confidence: Math.round(result.diseasePercentage),
+                    confidence: (result.confidence * 100).toFixed(1), // Actual model confidence
+                    actualPercentage: result.diseasePercentage.toFixed(2),
+                    thresholdUsed: result.thresholdUsed,
                     findings: [
                         `Disease coverage: ${result.diseasePercentage.toFixed(2)}%`,
                         `Severity classification: ${result.severityLevel}`,
+                        `Model Confidence: ${(result.confidence * 100).toFixed(1)}%`,
                         `Detection threshold: ${(result.thresholdUsed * 100).toFixed(0)}%`,
                         result.hasDiseaseDetected
                             ? 'Potential abnormalities detected'
