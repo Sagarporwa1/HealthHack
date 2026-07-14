@@ -1,6 +1,6 @@
 # HealthHack - Oral Health AI Detection & Monitoring 🦷
 
-HealthHack is a premium React Native application designed for the early detection and monitoring of oral health issues using AI image analysis. It empowers users to take control of their oral health through quick screenings, educational resources, and secure health tracking.
+HealthHack is a premium React Native application designed for the early detection and monitoring of oral health issues using AI image analysis. It empowers users to take control of their oral health through quick screenings, educational resources, and secure health tracking
 
 ## ✨ Key Features
 
